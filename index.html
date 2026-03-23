@@ -283,18 +283,26 @@
        4. Gallery (갤러리)
        ================================================================ */
     .gallery-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
+      display: flex;
       gap: 4px;
       margin-top: 24px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding-bottom: 8px;
     }
 
+    .gallery-grid::-webkit-scrollbar { display: none; }
+
     .gallery-grid__item {
-      aspect-ratio: 1;
-      border-radius: 4px;
+      flex: 0 0 85%;
+      aspect-ratio: 3/4;
+      border-radius: 8px;
       overflow: hidden;
       cursor: pointer;
       position: relative;
+      scroll-snap-align: center;
     }
 
     .gallery-grid__item img {
@@ -909,7 +917,7 @@
     document.body.style.position = '';
     document.body.style.top = '';
     document.body.style.width = '';
-    window.scrollTo(0, scrollYBeforeLock);
+    window.scrollTo({ top: scrollYBeforeLock, behavior: 'instant' });
   }
 
   /* ================================================================
@@ -920,8 +928,76 @@
     requestAnimationFrame(function () {
       requestAnimationFrame(function () {
         heroSection.classList.add('loaded');
+        setTimeout(launchConfetti, 800);
       });
     });
+  }
+
+  /* ================================================================
+     Confetti (폭죽 효과)
+     ================================================================ */
+  function launchConfetti() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    var canvas = document.createElement('canvas');
+    canvas.style.cssText = 'position:fixed;inset:0;z-index:999;pointer-events:none;';
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    document.body.appendChild(canvas);
+    var ctx = canvas.getContext('2d');
+
+    var colors = ['#c9b99a', '#e0d5c1', '#f5f0eb', '#e07070', '#ff9999', '#ffd700', '#fff'];
+    var particles = [];
+    var PARTICLE_COUNT = 80;
+
+    for (var i = 0; i < PARTICLE_COUNT; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height * -1,
+        w: Math.random() * 8 + 4,
+        h: Math.random() * 4 + 2,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        vx: (Math.random() - 0.5) * 3,
+        vy: Math.random() * 3 + 2,
+        rot: Math.random() * 360,
+        rotSpeed: (Math.random() - 0.5) * 10,
+        opacity: 1
+      });
+    }
+
+    var startTime = Date.now();
+    var DURATION = 3000;
+
+    function animate() {
+      var elapsed = Date.now() - startTime;
+      if (elapsed > DURATION) {
+        canvas.remove();
+        return;
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      var fadeRatio = elapsed > DURATION * 0.6 ? 1 - (elapsed - DURATION * 0.6) / (DURATION * 0.4) : 1;
+
+      for (var i = 0; i < particles.length; i++) {
+        var p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.05;
+        p.rot += p.rotSpeed;
+
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot * Math.PI / 180);
+        ctx.globalAlpha = fadeRatio;
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    requestAnimationFrame(animate);
   }
 
   /* ================================================================
@@ -1119,16 +1195,12 @@
     if (!list) return;
     var isOpen = list.classList.contains('open');
 
-    document.querySelectorAll('.account-list').forEach(function (el) {
-      el.classList.remove('open');
-      el.setAttribute('aria-hidden', 'true');
-    });
-    document.querySelectorAll('.account-toggle').forEach(function (el) {
-      el.classList.remove('open');
-      el.setAttribute('aria-expanded', 'false');
-    });
-
-    if (!isOpen) {
+    if (isOpen) {
+      list.classList.remove('open');
+      list.setAttribute('aria-hidden', 'true');
+      btn.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+    } else {
       list.classList.add('open');
       list.setAttribute('aria-hidden', 'false');
       btn.classList.add('open');
