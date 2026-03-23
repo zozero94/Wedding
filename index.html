@@ -325,13 +325,14 @@
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
-      transition: opacity 0.3s ease, visibility 0.3s;
+      transition: opacity 0.3s ease, visibility 0s 0.3s;
     }
 
     .fullview.active {
       opacity: 1;
       visibility: visible;
       pointer-events: auto;
+      transition: opacity 0.3s ease, visibility 0s;
     }
 
     .fullview img,
@@ -344,7 +345,7 @@
 
     .fullview__close {
       position: absolute;
-      top: 16px;
+      top: calc(16px + env(safe-area-inset-top));
       right: 16px;
       background: none;
       border: none;
@@ -593,9 +594,10 @@
       transition: transform 0.2s, background 0.2s, opacity 0.3s;
       -webkit-tap-highlight-color: transparent;
       opacity: 0;
+      pointer-events: none;
     }
 
-    .share-float.visible { opacity: 1; }
+    .share-float.visible { opacity: 1; pointer-events: auto; }
     .share-float:hover { transform: scale(1.08); }
     .share-float:active { background: var(--color-primary-dark); transform: scale(0.95); }
 
@@ -659,8 +661,7 @@
       width: 100%;
       transform: scaleX(0);
       transform-origin: left center;
-      transition: transform 0.1s linear;
-      will-change: transform;
+      transition: transform 0.05s linear;
     }
 
     /* ================================================================
@@ -759,10 +760,10 @@
   <section class="gallery fade-in" aria-label="갤러리">
     <p class="section-title">GALLERY</p>
     <div class="gallery-grid" id="gallery-grid">
-      <div class="gallery-grid__item" data-type="video">
+      <div class="gallery-grid__item" data-type="video" role="button" tabindex="0" aria-label="동영상 전체보기">
         <video data-src="images/video.mp4" autoplay muted loop playsinline preload="none" aria-label="조재영 민현경 영상"></video>
       </div>
-      <div class="gallery-grid__item" data-type="image">
+      <div class="gallery-grid__item" data-type="image" role="button" tabindex="0" aria-label="갤러리 사진 1 전체보기">
         <picture>
           <source srcset="images/gallery-01.webp" type="image/webp">
           <img src="images/gallery-01.jpg" alt="갤러리 사진 1" width="960" height="1423" loading="lazy">
@@ -850,7 +851,7 @@
       참석 여부를 알려주시면<br>감사하겠습니다.
     </p>
     <!-- href를 구글 폼 등 실제 링크로 교체하세요 -->
-    <a href="#" class="btn-primary" role="button">참석 의사 전달하기</a>
+    <a href="#" class="btn-primary">참석 의사 전달하기</a>
   </section>
 
   <footer class="footer">
@@ -898,7 +899,7 @@
   var scrollYBeforeLock = 0;
 
   function lockBodyScroll() {
-    scrollYBeforeLock = window.pageYOffset;
+    scrollYBeforeLock = window.scrollY;
     document.body.style.position = 'fixed';
     document.body.style.top = '-' + scrollYBeforeLock + 'px';
     document.body.style.width = '100%';
@@ -917,7 +918,9 @@
   var heroSection = document.querySelector('.hero');
   if (heroSection) {
     requestAnimationFrame(function () {
-      heroSection.classList.add('loaded');
+      requestAnimationFrame(function () {
+        heroSection.classList.add('loaded');
+      });
     });
   }
 
@@ -929,7 +932,7 @@
     if (!ticking) {
       requestAnimationFrame(function () {
         ticking = false;
-        var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        var scrollTop = window.scrollY || document.documentElement.scrollTop;
         var docHeight = document.documentElement.scrollHeight - window.innerHeight;
         var progress = docHeight > 0 ? scrollTop / docHeight : 0;
 
@@ -1017,12 +1020,12 @@
     var mapObserver = new IntersectionObserver(function (entries) {
       if (entries[0].isIntersecting) {
         mapObserver.disconnect();
-        loadKakaoMapSDK(function () { setTimeout(initMap, 100); });
+        loadKakaoMapSDK(initMap);
       }
     }, { rootMargin: '300px' });
     mapObserver.observe(mapEl);
   } else if (mapEl) {
-    loadKakaoMapSDK(function () { setTimeout(initMap, 300); });
+    loadKakaoMapSDK(initMap);
   }
 
   /* ================================================================
@@ -1055,6 +1058,8 @@
           var v = entry.target;
           v.src = v.dataset.src;
           v.load();
+          var p = v.play();
+          if (p !== undefined) p.catch(function () {});
           videoObserver.unobserve(v);
         }
       });
@@ -1173,20 +1178,24 @@
      ================================================================ */
   var lastFocusedElement = null;
 
-  function openFullview(type, src) {
+  function openFullview(type, src, alt) {
     lastFocusedElement = document.activeElement;
 
     if (type === 'video') {
       fullviewImg.style.display = 'none';
       fullviewVideo.style.display = 'block';
       fullviewVideo.src = src;
-      fullviewVideo.play();
+      var playPromise = fullviewVideo.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(function () { fullviewVideo.controls = true; });
+      }
     } else {
       fullviewVideo.style.display = 'none';
       fullviewVideo.pause();
       fullviewVideo.src = '';
       fullviewImg.style.display = 'block';
       fullviewImg.src = src;
+      fullviewImg.alt = alt || '전체보기';
     }
 
     fullview.classList.add('active');
@@ -1205,18 +1214,34 @@
     if (lastFocusedElement) lastFocusedElement.focus();
   }
 
-  // 이벤트 위임: 갤러리 클릭
-  document.getElementById('gallery-grid').addEventListener('click', function (e) {
-    var item = e.target.closest('.gallery-grid__item');
+  // 갤러리 전체보기 트리거
+  function handleGalleryItem(item) {
     if (!item) return;
-
     var type = item.getAttribute('data-type');
     if (type === 'video') {
       var video = item.querySelector('video');
       openFullview('video', video.src || video.dataset.src);
     } else {
       var img = item.querySelector('img');
-      if (img) openFullview('image', img.src);
+      if (img) openFullview('image', img.src, img.alt);
+    }
+  }
+
+  var galleryGrid = document.getElementById('gallery-grid');
+
+  // 클릭
+  galleryGrid.addEventListener('click', function (e) {
+    handleGalleryItem(e.target.closest('.gallery-grid__item'));
+  });
+
+  // 키보드 (Enter/Space)
+  galleryGrid.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      var item = e.target.closest('.gallery-grid__item');
+      if (item) {
+        e.preventDefault();
+        handleGalleryItem(item);
+      }
     }
   });
 
@@ -1226,10 +1251,24 @@
     if (e.target === fullview) closeFullview();
   });
 
-  // ESC 키 닫기
+  // ESC 키 닫기 + focus trap
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && fullview.classList.contains('active')) {
+    if (!fullview.classList.contains('active')) return;
+
+    if (e.key === 'Escape') {
       closeFullview();
+    } else if (e.key === 'Tab') {
+      var focusable = fullview.querySelectorAll('button, video[controls], [tabindex]:not([tabindex="-1"])');
+      if (focusable.length === 0) return;
+      var first = focusable[0];
+      var last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     }
   });
 
