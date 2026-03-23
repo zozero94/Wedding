@@ -153,12 +153,6 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    @media (prefers-reduced-motion: reduce) {
-      .fade-in { opacity: 1; transform: none; transition: none; }
-      .hero__label, .hero__names, .hero__photo, .hero__date {
-        opacity: 1; transform: none; animation: none !important;
-      }
-    }
 
     /* ================================================================
        1. Hero (메인 커버)
@@ -1001,8 +995,6 @@
      Confetti (폭죽 효과)
      ================================================================ */
   function launchConfetti() {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
     var canvas = document.createElement('canvas');
     canvas.style.cssText = 'position:fixed;inset:0;z-index:999;pointer-events:none;';
     var vw = window.visualViewport ? window.visualViewport.width : window.innerWidth;
@@ -1624,9 +1616,7 @@
   /* ================================================================
      Scroll Fade-in (IntersectionObserver)
      ================================================================ */
-  var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  if (!prefersReducedMotion && 'IntersectionObserver' in window) {
+  if ('IntersectionObserver' in window) {
     var observer = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
         if (entry.isIntersecting) {
