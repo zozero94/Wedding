@@ -236,27 +236,30 @@
       color: var(--color-text-light);
     }
 
-    .calendar table { width: 100%; border-collapse: collapse; }
+    .calendar table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 
     .calendar th {
       font-size: 0.75rem;
       font-weight: 400;
       color: #aaa;
-      padding: 8px 0;
+      height: 36px;
+      vertical-align: middle;
+      text-align: center;
     }
 
     .calendar th:first-child { color: var(--color-sunday); }
 
     .calendar td {
       font-size: 0.8125rem;
-      padding: 8px 0;
+      height: 36px;
       color: var(--color-text-faint);
       font-weight: 300;
+      vertical-align: middle;
+      text-align: center;
     }
 
     .calendar td.sunday { color: var(--color-sunday); }
 
-    .calendar td.wedding-day { position: relative; }
     .calendar td.wedding-day span {
       display: inline-flex;
       align-items: center;
@@ -264,8 +267,8 @@
       background: var(--color-primary);
       color: #fff;
       border-radius: 50%;
-      width: 32px;
-      height: 32px;
+      width: 30px;
+      height: 30px;
       font-weight: 500;
     }
 
@@ -714,7 +717,7 @@
     </p>
     <div class="greeting__parents">
       조현수 · 김덕미의 아들 <strong>재영</strong><br>
-      민OO · 김희숙의 딸 <strong>현경</strong>
+      민병기 · 김희숙의 딸 <strong>현경</strong>
     </div>
   </section>
 
@@ -824,20 +827,18 @@
       </div>
     </div>
 
-    <!-- 신부측: 계좌 확정 후 아래 주석을 해제하세요
     <div class="account-group">
       <button class="account-toggle" aria-expanded="false" aria-controls="account-bride">신부측 계좌번호</button>
       <div class="account-list" id="account-bride" role="region" aria-hidden="true">
         <div class="account-item">
           <div class="account-item__info">
-            <span class="account-item__bank">OO은행</span><br>
-            000-0000-0000-00 민현경
+            <span class="account-item__bank">국민은행</span><br>
+            68040200004558 민현경
           </div>
-          <button class="copy-btn" data-account="000-0000-0000-00" aria-label="신부 계좌번호 복사">복사</button>
+          <button class="copy-btn" data-account="68040200004558" aria-label="신부 계좌번호 복사">복사</button>
         </div>
       </div>
     </div>
-    -->
   </section>
 
   <div class="divider" role="separator" aria-hidden="true"></div>
