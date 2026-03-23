@@ -817,6 +817,12 @@
   <section class="gallery fade-in" aria-label="갤러리">
     <p class="section-title">GALLERY</p>
     <div class="gallery-grid" id="gallery-grid">
+      <div class="gallery-grid__item" data-type="image" role="button" tabindex="0" aria-label="갤러리 사진 전체보기">
+        <picture>
+          <source srcset="images/gallery-00.webp" type="image/webp">
+          <img src="images/gallery-00.jpg" alt="갤러리 사진" width="960" height="1323" loading="lazy">
+        </picture>
+      </div>
       <div class="gallery-grid__item" data-type="video" role="button" tabindex="0" aria-label="동영상 전체보기">
         <video data-src="images/video.mp4" autoplay muted loop playsinline preload="none" aria-hidden="true"></video>
       </div>
