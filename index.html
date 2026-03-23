@@ -39,6 +39,14 @@
       font-display: swap;
     }
 
+    @font-face {
+      font-family: 'KCCGanpan';
+      src: url('fonts/KCC-Ganpan.woff2') format('woff2');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+
     /* ================================================================
        CSS Custom Properties
        ================================================================ */
@@ -56,7 +64,7 @@
       --color-placeholder: #e8e2da;
       --color-sunday: #e07070;
       --color-border: #ddd;
-      --font-main: 'KyoboHand', 'Noto Serif KR', 'Georgia', serif;
+      --font-main: 'KCCGanpan', 'Noto Serif KR', 'Georgia', serif;
       --max-width: 480px;
       --section-padding: 60px 24px;
       --transition-base: 0.3s ease;
@@ -230,7 +238,7 @@
        ================================================================ */
     .calendar-section { background: var(--color-bg-alt); }
 
-    .calendar { max-width: 320px; margin: 0 auto; }
+    .calendar { max-width: 320px; margin: 0 auto; font-family: 'KyoboHand', 'Georgia', serif; }
 
     .calendar__month {
       font-size: 1rem;
