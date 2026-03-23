@@ -40,8 +40,8 @@
     }
 
     @font-face {
-      font-family: 'KCCGanpan';
-      src: url('fonts/KCC-Ganpan.woff2') format('woff2');
+      font-family: 'HancomSans';
+      src: url('fonts/HancomSans-SemiBold.woff2') format('woff2');
       font-weight: normal;
       font-style: normal;
       font-display: swap;
@@ -64,7 +64,7 @@
       --color-placeholder: #e8e2da;
       --color-sunday: #e07070;
       --color-border: #ddd;
-      --font-main: 'KCCGanpan', 'Noto Serif KR', 'Georgia', serif;
+      --font-main: 'HancomSans', 'Noto Serif KR', 'Georgia', serif;
       --max-width: 480px;
       --section-padding: 60px 24px;
       --transition-base: 0.3s ease;
@@ -184,8 +184,9 @@
     }
 
     .hero__names {
+      font-family: 'KyoboHand', var(--font-main);
       font-size: 1.75rem;
-      font-weight: 300;
+      font-weight: normal;
       line-height: 1.4;
       margin-bottom: 32px;
     }
@@ -238,7 +239,7 @@
        ================================================================ */
     .calendar-section { background: var(--color-bg-alt); }
 
-    .calendar { max-width: 320px; margin: 0 auto; font-family: 'KyoboHand', 'Georgia', serif; }
+    .calendar { max-width: 320px; margin: 0 auto; }
 
     .calendar__month {
       font-size: 1rem;
@@ -909,18 +910,6 @@
         </div>
       </div>
     </div>
-  </section>
-
-  <div class="divider" role="separator" aria-hidden="true"></div>
-
-  <!-- 7. RSVP -->
-  <section class="rsvp fade-in" aria-label="참석 여부">
-    <p class="section-title">R.S.V.P</p>
-    <p class="rsvp__subtitle">
-      참석 여부를 알려주시면<br>감사하겠습니다.
-    </p>
-    <!-- href를 구글 폼 등 실제 링크로 교체하세요 -->
-    <a href="#" class="btn-primary">참석 의사 전달하기</a>
   </section>
 
   <footer class="footer">
