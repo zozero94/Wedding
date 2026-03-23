@@ -831,7 +831,7 @@
     <div id="kakao-map" aria-label="까사그랑데 센트로 지도"></div>
 
     <nav class="map-buttons" aria-label="지도 앱 열기">
-      <a class="map-btn" href="https://map.kakao.com/link/map/%EA%B9%8C%EC%82%AC%EA%B7%B8%EB%9E%91%EB%8D%B0%20%EC%84%BC%ED%8A%B8%EB%A1%9C,37.54060,127.06882" target="_blank" rel="noopener noreferrer">카카오맵</a>
+      <a class="map-btn" href="#" id="kakaomap-btn" rel="noopener noreferrer">카카오맵</a>
       <a class="map-btn" href="https://map.naver.com/v5/search/%EA%B9%8C%EC%82%AC%EA%B7%B8%EB%9E%91%EB%8D%B0%20%EC%84%BC%ED%8A%B8%EB%A1%9C" target="_blank" rel="noopener noreferrer">네이버지도</a>
       <a class="map-btn" href="#" id="tmap-btn" rel="noopener noreferrer">티맵</a>
     </nav>
@@ -927,6 +927,7 @@
   var VENUE_LNG = 127.06882;
   var VENUE_NAME = '까사그랑데 센트로';
   var KAKAO_APP_KEY = '52e9f0a8b230e753dfd15ff9782160c7'; // 반드시 Kakao Developers에서 도메인 제한 설정 필수
+  var WEDDING_URL = 'https://zozero94.github.io/Wedding/';
   var WEDDING_UTC = Date.UTC(2026, 7, 30);
 
   /* ── DOM 캐시 ── */
@@ -1262,17 +1263,17 @@
         content: {
           title: '조재영❤️민현경',
           description: '2026년 8월 30일 일요일 낮 12시\n까사그랑데 센트로',
-          imageUrl: 'https://zozero94.github.io/Wedding/images/og-thumbnail.jpg',
+          imageUrl: WEDDING_URL + 'images/og-thumbnail.jpg',
           link: {
-            mobileWebUrl: window.location.href,
-            webUrl: window.location.href
+            mobileWebUrl: WEDDING_URL,
+            webUrl: WEDDING_URL
           }
         },
         buttons: [{
           title: '청첩장 보기',
           link: {
-            mobileWebUrl: window.location.href,
-            webUrl: window.location.href
+            mobileWebUrl: WEDDING_URL,
+            webUrl: WEDDING_URL
           }
         }]
       });
@@ -1487,34 +1488,55 @@
   });
 
   /* ================================================================
-     캘린더 일정 추가 (.ics 다운로드)
+     캘린더 일정 추가 (앱 딥링크)
      ================================================================ */
   var calBtn = document.getElementById('add-calendar-btn');
   if (calBtn) {
     calBtn.addEventListener('click', function () {
-      var ics = [
-        'BEGIN:VCALENDAR',
-        'VERSION:2.0',
-        'PRODID:-//Wedding//KO',
-        'BEGIN:VEVENT',
-        'DTSTART:20260830T030000Z',
-        'DTEND:20260830T050000Z',
-        'SUMMARY:조재영 ❤️ 민현경 결혼식',
-        'LOCATION:까사그랑데 센트로 (서울 광진구 능동로 87\\, 6층)',
-        'DESCRIPTION:2026년 8월 30일 일요일 낮 12시\\n까사그랑데 센트로 6층',
-        'END:VEVENT',
-        'END:VCALENDAR'
-      ].join('\r\n');
+      var calParams = 'text=' + encodeURIComponent('조재영 ❤️ 민현경 결혼식')
+        + '&dates=20260830T030000Z/20260830T050000Z'
+        + '&details=' + encodeURIComponent('2026년 8월 30일 일요일 낮 12시\n까사그랑데 센트로 6층')
+        + '&location=' + encodeURIComponent('까사그랑데 센트로, 서울 광진구 능동로 87');
 
-      var blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = 'wedding.ics';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+      var isAndroid = /Android/i.test(navigator.userAgent);
+
+      if (isAndroid) {
+        // Android: intent로 구글 캘린더 앱 직접 열기
+        window.location.href = 'intent://calendar/event?action=TEMPLATE&' + calParams
+          + '#Intent;scheme=https;package=com.google.android.calendar;'
+          + 'S.browser_fallback_url=' + encodeURIComponent('https://calendar.google.com/calendar/render?action=TEMPLATE&' + calParams)
+          + ';end';
+      } else if (isIOS) {
+        // iOS: 구글 캘린더 앱 스킴 시도 → 실패 시 웹
+        var appUrl = 'googlecalendar://openEvent?title=' + encodeURIComponent('조재영 ❤️ 민현경 결혼식');
+        var webUrl = 'https://calendar.google.com/calendar/render?action=TEMPLATE&' + calParams;
+        var timer = setTimeout(function () { window.open(webUrl, '_blank'); }, 1500);
+        window.addEventListener('blur', function () { clearTimeout(timer); }, { once: true });
+        window.location.href = appUrl;
+      } else {
+        // 데스크탑: 구글 캘린더 웹
+        window.open('https://calendar.google.com/calendar/render?action=TEMPLATE&' + calParams, '_blank');
+      }
+    });
+  }
+
+  /* ================================================================
+     카카오맵 딥링크
+     ================================================================ */
+  var kakaomapBtn = document.getElementById('kakaomap-btn');
+  if (kakaomapBtn) {
+    kakaomapBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      var appUrl = 'kakaomap://look?p=' + VENUE_LAT + ',' + VENUE_LNG;
+      var webUrl = 'https://map.kakao.com/link/map/' + encodeURIComponent(VENUE_NAME) + ',' + VENUE_LAT + ',' + VENUE_LNG;
+      var moved = false;
+
+      window.location.href = appUrl;
+      setTimeout(function () {
+        if (!moved) window.open(webUrl, '_blank');
+      }, 1500);
+      window.addEventListener('blur', function () { moved = true; }, { once: true });
     });
   }
 
