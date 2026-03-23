@@ -930,11 +930,9 @@
 (function () {
   'use strict';
 
-  /* 이미지/동영상 롱클릭 메뉴 차단 */
+  /* 페이지 전체 우클릭/롱클릭 메뉴 차단 */
   document.addEventListener('contextmenu', function (e) {
-    if (e.target.closest('img, video')) {
-      e.preventDefault();
-    }
+    e.preventDefault();
   });
 
   /* 브라우저 자동 스크롤 복원 비활성화 */
