@@ -27,12 +27,18 @@
   <!-- 검색엔진 차단 -->
   <meta name="robots" content="noindex, nofollow">
 
-  <!-- 웹폰트 preconnect -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;500&display=swap" rel="stylesheet">
-
   <style>
+    /* ================================================================
+       웹폰트
+       ================================================================ */
+    @font-face {
+      font-family: 'KyoboHand';
+      src: url('fonts/KyoboHandwriting2025lyb.woff2') format('woff2');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+
     /* ================================================================
        CSS Custom Properties
        ================================================================ */
@@ -50,7 +56,7 @@
       --color-placeholder: #e8e2da;
       --color-sunday: #e07070;
       --color-border: #ddd;
-      --font-main: 'Noto Serif KR', 'Georgia', serif;
+      --font-main: 'KyoboHand', 'Noto Serif KR', 'Georgia', serif;
       --max-width: 480px;
       --section-padding: 60px 24px;
       --transition-base: 0.3s ease;
