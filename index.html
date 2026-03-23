@@ -283,26 +283,18 @@
        4. Gallery (갤러리)
        ================================================================ */
     .gallery-grid {
-      display: flex;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 4px;
       margin-top: 24px;
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-      padding-bottom: 8px;
     }
 
-    .gallery-grid::-webkit-scrollbar { display: none; }
-
     .gallery-grid__item {
-      flex: 0 0 85%;
-      aspect-ratio: 3/4;
-      border-radius: 8px;
+      aspect-ratio: 1;
+      border-radius: 4px;
       overflow: hidden;
       cursor: pointer;
       position: relative;
-      scroll-snap-align: center;
     }
 
     .gallery-grid__item img {
@@ -365,6 +357,40 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      z-index: 201;
+    }
+
+    .fullview__nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,0.15);
+      border: none;
+      color: #fff;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 12px;
+      border-radius: 50%;
+      min-width: 44px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 201;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .fullview__nav:active { background: rgba(255,255,255,0.3); }
+    .fullview__nav--prev { left: 12px; }
+    .fullview__nav--next { right: 12px; }
+
+    .fullview__counter {
+      position: absolute;
+      bottom: calc(24px + env(safe-area-inset-bottom));
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.7);
+      font-size: 0.8125rem;
       z-index: 201;
     }
 
@@ -783,8 +809,11 @@
   <!-- 전체보기 오버레이 -->
   <div class="fullview" id="fullview" role="dialog" aria-modal="true" aria-label="전체보기" aria-hidden="true">
     <button class="fullview__close" aria-label="닫기">&times;</button>
+    <button class="fullview__nav fullview__nav--prev" aria-label="이전">&#10094;</button>
+    <button class="fullview__nav fullview__nav--next" aria-label="다음">&#10095;</button>
     <img src="" alt="전체보기" id="fullview-img" style="display:none;">
     <video id="fullview-video" controls playsinline style="display:none;" aria-label="동영상 전체보기"></video>
+    <span class="fullview__counter" id="fullview-counter"></span>
   </div>
 
   <div class="divider" role="separator" aria-hidden="true"></div>
@@ -1209,19 +1238,72 @@
   });
 
   /* ================================================================
-     공유 기능
+     공유 기능 (카카오톡 우선 → Web Share API → 링크 복사)
      ================================================================ */
+  // 카카오 JS SDK 초기화 (공유용)
+  function initKakaoShare() {
+    if (typeof Kakao === 'undefined') return false;
+    if (!Kakao.isInitialized()) {
+      Kakao.init(KAKAO_APP_KEY);
+    }
+    return Kakao.isInitialized();
+  }
+
+  function shareKakao() {
+    if (!initKakaoShare()) return false;
+    try {
+      Kakao.Share.sendDefault({
+        objectType: 'feed',
+        content: {
+          title: '조재영❤️민현경',
+          description: '2026년 8월 30일 일요일 낮 12시\n까사그랑데 센트로',
+          imageUrl: 'https://zozero94.github.io/Wedding/images/og-thumbnail.jpg',
+          link: {
+            mobileWebUrl: window.location.href,
+            webUrl: window.location.href
+          }
+        },
+        buttons: [{
+          title: '청첩장 보기',
+          link: {
+            mobileWebUrl: window.location.href,
+            webUrl: window.location.href
+          }
+        }]
+      });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // 카카오 JS SDK 동적 로드
+  (function () {
+    var script = document.createElement('script');
+    script.src = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js';
+    script.integrity = 'sha384-DKYJZ8NLiK8MN4/C5P2ezmFnkrysYIcMZMask2vEbEZCRk1IepOiKHMeJN1hyYD';
+    script.crossOrigin = 'anonymous';
+    script.async = true;
+    document.head.appendChild(script);
+  })();
+
   if (shareBtn) {
     shareBtn.addEventListener('click', function () {
-      var shareData = {
-        title: '조재영❤️민현경',
-        text: '2026년 8월 30일 일요일 낮 12시\n까사그랑데 센트로에서 결혼합니다.',
-        url: window.location.href
-      };
+      // 카카오톡 공유 우선
+      if (shareKakao()) return;
 
+      // Web Share API fallback
       if (navigator.share) {
-        navigator.share(shareData).catch(function () {});
-      } else if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.share({
+          title: '조재영❤️민현경',
+          text: '2026년 8월 30일 일요일 낮 12시\n까사그랑데 센트로에서 결혼합니다.',
+          url: window.location.href
+        }).catch(function () {});
+        return;
+      }
+
+      // 링크 복사 fallback
+      if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(window.location.href).then(function () {
           showToast('링크가 복사되었습니다');
         });
@@ -1246,37 +1328,57 @@
   }
 
   /* ================================================================
-     갤러리 전체보기 (이미지 + 동영상)
+     갤러리 전체보기 (ViewPager 방식 좌우 스와이프)
      ================================================================ */
   var lastFocusedElement = null;
+  var galleryItems = [];
+  var currentIndex = 0;
+  var fullviewCounter = document.getElementById('fullview-counter');
 
-  function openFullview(type, src, alt) {
-    lastFocusedElement = document.activeElement;
-
+  // 갤러리 아이템 목록 수집
+  document.querySelectorAll('.gallery-grid__item').forEach(function (item) {
+    var type = item.getAttribute('data-type');
     if (type === 'video') {
+      var video = item.querySelector('video');
+      galleryItems.push({ type: 'video', src: video.dataset.src || video.src });
+    } else {
+      var img = item.querySelector('img');
+      if (img) galleryItems.push({ type: 'image', src: img.src, alt: img.alt });
+    }
+  });
+
+  function showItem(index) {
+    var item = galleryItems[index];
+    if (item.type === 'video') {
       fullviewImg.style.display = 'none';
       fullviewVideo.style.display = 'block';
-      fullviewVideo.src = src;
-      var playPromise = fullviewVideo.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(function () { fullviewVideo.controls = true; });
-      }
+      fullviewVideo.src = item.src;
+      var p = fullviewVideo.play();
+      if (p !== undefined) p.catch(function () { fullviewVideo.controls = true; });
     } else {
       fullviewVideo.style.display = 'none';
       fullviewVideo.pause();
       fullviewVideo.src = '';
       fullviewImg.style.display = 'block';
-      fullviewImg.src = src;
-      fullviewImg.alt = alt || '전체보기';
+      fullviewImg.src = item.src;
+      fullviewImg.alt = item.alt || '전체보기';
     }
+    fullviewCounter.textContent = (index + 1) + ' / ' + galleryItems.length;
+  }
 
+  function openFullview(index) {
+    lastFocusedElement = document.activeElement;
+    currentIndex = index;
+    showItem(currentIndex);
     fullview.classList.add('active');
     fullview.setAttribute('aria-hidden', 'false');
     lockBodyScroll();
     fullview.querySelector('.fullview__close').focus();
+    history.pushState({ fullview: true }, '');
   }
 
-  function closeFullview() {
+  function closeFullview(fromPopstate) {
+    if (!fullview.classList.contains('active')) return;
     fullview.classList.remove('active');
     fullview.setAttribute('aria-hidden', 'true');
     fullviewVideo.pause();
@@ -1284,26 +1386,42 @@
     fullviewImg.src = '';
     unlockBodyScroll();
     if (lastFocusedElement) lastFocusedElement.focus();
+    if (!fromPopstate) {
+      history.back();
+    }
   }
 
-  // 갤러리 전체보기 트리거
-  function handleGalleryItem(item) {
-    if (!item) return;
-    var type = item.getAttribute('data-type');
-    if (type === 'video') {
-      var video = item.querySelector('video');
-      openFullview('video', video.src || video.dataset.src);
-    } else {
-      var img = item.querySelector('img');
-      if (img) openFullview('image', img.src, img.alt);
+  // 안드로이드 뒤로가기 대응
+  window.addEventListener('popstate', function () {
+    if (fullview.classList.contains('active')) {
+      closeFullview(true);
     }
+  });
+
+  function showPrev() {
+    fullviewVideo.pause();
+    fullviewVideo.src = '';
+    currentIndex = (currentIndex - 1 + galleryItems.length) % galleryItems.length;
+    showItem(currentIndex);
+  }
+
+  function showNext() {
+    fullviewVideo.pause();
+    fullviewVideo.src = '';
+    currentIndex = (currentIndex + 1) % galleryItems.length;
+    showItem(currentIndex);
   }
 
   var galleryGrid = document.getElementById('gallery-grid');
 
-  // 클릭
+  // 클릭으로 fullview 열기
   galleryGrid.addEventListener('click', function (e) {
-    handleGalleryItem(e.target.closest('.gallery-grid__item'));
+    var item = e.target.closest('.gallery-grid__item');
+    if (!item) return;
+    var items = galleryGrid.querySelectorAll('.gallery-grid__item');
+    for (var i = 0; i < items.length; i++) {
+      if (items[i] === item) { openFullview(i); break; }
+    }
   });
 
   // 키보드 (Enter/Space)
@@ -1312,7 +1430,10 @@
       var item = e.target.closest('.gallery-grid__item');
       if (item) {
         e.preventDefault();
-        handleGalleryItem(item);
+        var items = galleryGrid.querySelectorAll('.gallery-grid__item');
+        for (var i = 0; i < items.length; i++) {
+          if (items[i] === item) { openFullview(i); break; }
+        }
       }
     }
   });
@@ -1323,12 +1444,33 @@
     if (e.target === fullview) closeFullview();
   });
 
-  // ESC 키 닫기 + focus trap
+  // 이전/다음 버튼
+  fullview.querySelector('.fullview__nav--prev').addEventListener('click', function (e) { e.stopPropagation(); showPrev(); });
+  fullview.querySelector('.fullview__nav--next').addEventListener('click', function (e) { e.stopPropagation(); showNext(); });
+
+  // 터치 스와이프
+  var touchStartX = 0;
+  fullview.addEventListener('touchstart', function (e) {
+    touchStartX = e.changedTouches[0].screenX;
+  }, { passive: true });
+  fullview.addEventListener('touchend', function (e) {
+    var diff = touchStartX - e.changedTouches[0].screenX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) showNext();
+      else showPrev();
+    }
+  }, { passive: true });
+
+  // ESC / 화살표 키 / focus trap
   document.addEventListener('keydown', function (e) {
     if (!fullview.classList.contains('active')) return;
 
     if (e.key === 'Escape') {
       closeFullview();
+    } else if (e.key === 'ArrowLeft') {
+      showPrev();
+    } else if (e.key === 'ArrowRight') {
+      showNext();
     } else if (e.key === 'Tab') {
       var focusable = fullview.querySelectorAll('button, video[controls], [tabindex]:not([tabindex="-1"])');
       if (focusable.length === 0) return;
