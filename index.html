@@ -78,10 +78,22 @@
       padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     }
 
-    img {
+    img, video {
       max-width: 100%;
       height: auto;
       display: block;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      pointer-events: none;
+    }
+
+    /* 갤러리/fullview 내부는 클릭 허용 */
+    .gallery-grid__item img,
+    .gallery-grid__item video,
+    .fullview img,
+    .fullview video {
+      pointer-events: auto;
     }
 
     /* ================================================================
@@ -916,6 +928,13 @@
 <script>
 (function () {
   'use strict';
+
+  /* 이미지/동영상 롱클릭 메뉴 차단 */
+  document.addEventListener('contextmenu', function (e) {
+    if (e.target.closest('img, video')) {
+      e.preventDefault();
+    }
+  });
 
   /* 브라우저 자동 스크롤 복원 비활성화 */
   if ('scrollRestoration' in history) {
