@@ -986,7 +986,7 @@
     requestAnimationFrame(function () {
       requestAnimationFrame(function () {
         heroSection.classList.add('loaded');
-        setTimeout(launchConfetti, 800);
+        setTimeout(function () { try { launchConfetti(); } catch (e) {} }, 800);
       });
     });
   }
@@ -1003,6 +1003,7 @@
     canvas.height = vh;
     document.body.appendChild(canvas);
     var ctx = canvas.getContext('2d');
+    if (!ctx) { canvas.remove(); return; }
 
     var colors = ['#c9b99a', '#e0d5c1', '#f5f0eb', '#e07070', '#ff9999', '#ffd700', '#fff'];
     var particles = [];
