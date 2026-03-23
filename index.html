@@ -357,10 +357,10 @@
       transform: scale(1.05);
     }
 
-    /* placeholder 상태 */
-    .gallery-grid__item.photo-placeholder {
-      background: var(--color-placeholder);
-      font-size: 0.75rem;
+    .gallery-grid__item video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     /* ================================================================
@@ -747,17 +747,7 @@
       민현경
     </h1>
 
-    <!--
-      ■ 대표 사진 교체 방법:
-      1. images/hero-main.jpg 에 사진 저장 (권장: 960x1280px, 3:4 비율)
-      2. 아래 div를 <img> 태그로 교체:
-         <img src="images/hero-main.jpg" alt="조재영과 민현경" class="hero__photo" width="480" height="640" loading="eager">
-      3. photo-placeholder div는 삭제
-    -->
-    <div class="hero__photo photo-placeholder"
-         role="img"
-         aria-label="대표 사진 영역"
-         data-replace-with="images/hero-main.jpg">대표 사진</div>
+    <img src="images/hero-main.jpg" alt="조재영과 민현경" class="hero__photo" width="480" height="640" loading="eager">
 
     <p class="hero__date">
       <time datetime="2026-08-30T12:00:00+09:00">2026년 8월 30일 일요일 낮 12시</time><br>
@@ -840,21 +830,13 @@
        ============================================================ -->
   <section class="gallery fade-in" aria-label="갤러리">
     <p class="section-title">GALLERY</p>
-    <!--
-      ■ 사진 교체 방법:
-      images/ 폴더에 gallery-01.jpg ~ gallery-06.jpg 저장 후
-      각 div를 아래처럼 교체:
+    <div class="gallery-grid" id="gallery-grid">
+      <div class="gallery-grid__item">
+        <video src="images/video.mp4" autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover;border-radius:4px;"></video>
+      </div>
       <div class="gallery-grid__item">
         <img src="images/gallery-01.jpg" alt="갤러리 사진 1" width="480" height="480" loading="lazy">
       </div>
-    -->
-    <div class="gallery-grid" id="gallery-grid">
-      <div class="gallery-grid__item photo-placeholder" role="img" aria-label="갤러리 사진 1" data-replace-with="images/gallery-01.jpg">사진 1</div>
-      <div class="gallery-grid__item photo-placeholder" role="img" aria-label="갤러리 사진 2" data-replace-with="images/gallery-02.jpg">사진 2</div>
-      <div class="gallery-grid__item photo-placeholder" role="img" aria-label="갤러리 사진 3" data-replace-with="images/gallery-03.jpg">사진 3</div>
-      <div class="gallery-grid__item photo-placeholder" role="img" aria-label="갤러리 사진 4" data-replace-with="images/gallery-04.jpg">사진 4</div>
-      <div class="gallery-grid__item photo-placeholder" role="img" aria-label="갤러리 사진 5" data-replace-with="images/gallery-05.jpg">사진 5</div>
-      <div class="gallery-grid__item photo-placeholder" role="img" aria-label="갤러리 사진 6" data-replace-with="images/gallery-06.jpg">사진 6</div>
     </div>
   </section>
 
