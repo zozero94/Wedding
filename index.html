@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>조재영❤️민현경</title>
   <meta name="description" content="2026년 8월 30일 일요일 낮 12시, 까사그랑데 센트로에서 조재영과 민현경이 결혼합니다.">
   <meta name="theme-color" content="#c9b99a">
@@ -361,6 +361,47 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+    }
+
+    /* 이미지 전체보기 오버레이 */
+    .fullview {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0, 0, 0, 0.95);
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .fullview.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    .fullview img {
+      max-width: 94vw;
+      max-height: 90vh;
+      object-fit: contain;
+      border-radius: 4px;
+    }
+
+    .fullview__close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 2rem;
+      cursor: pointer;
+      min-width: 44px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     /* ================================================================
@@ -840,6 +881,12 @@
     </div>
   </section>
 
+  <!-- 이미지 전체보기 -->
+  <div class="fullview" id="fullview">
+    <button class="fullview__close" aria-label="닫기">&times;</button>
+    <img src="" alt="전체보기" id="fullview-img">
+  </div>
+
   <div class="divider" role="separator" aria-hidden="true"></div>
 
   <!-- ============================================================
@@ -1189,6 +1236,34 @@
       toastEl.classList.remove('show');
     }, 2200);
   }
+
+  /* ================================================================
+     갤러리 이미지 전체보기
+     ================================================================ */
+  var fullview = document.getElementById('fullview');
+  var fullviewImg = document.getElementById('fullview-img');
+
+  document.querySelectorAll('.gallery-grid__item img').forEach(function (img) {
+    img.style.cursor = 'pointer';
+    img.addEventListener('click', function () {
+      fullviewImg.src = img.src;
+      fullviewImg.alt = img.alt;
+      fullview.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    });
+  });
+
+  fullview.querySelector('.fullview__close').addEventListener('click', function () {
+    fullview.classList.remove('active');
+    document.body.style.overflow = '';
+  });
+
+  fullview.addEventListener('click', function (e) {
+    if (e.target === fullview) {
+      fullview.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  });
 
   /* ================================================================
      Scroll Fade-in (IntersectionObserver)
