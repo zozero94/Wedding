@@ -279,6 +279,29 @@
       letter-spacing: 2px;
     }
 
+    .calendar__add-btn {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 10px 24px;
+      font-size: 0.8125rem;
+      color: var(--color-text-light);
+      background: #fff;
+      border: 1px solid var(--color-border);
+      border-radius: 20px;
+      text-decoration: none;
+      font-family: var(--font-main);
+      transition: background 0.2s, border-color 0.2s;
+      -webkit-tap-highlight-color: transparent;
+      min-height: 44px;
+      line-height: 24px;
+    }
+
+    .calendar__add-btn:hover,
+    .calendar__add-btn:active {
+      background: var(--color-bg);
+      border-color: var(--color-primary-light);
+    }
+
     /* ================================================================
        4. Gallery (갤러리)
        ================================================================ */
@@ -359,30 +382,6 @@
       justify-content: center;
       z-index: 201;
     }
-
-    .fullview__nav {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgba(255,255,255,0.15);
-      border: none;
-      color: #fff;
-      font-size: 1.5rem;
-      cursor: pointer;
-      padding: 12px;
-      border-radius: 50%;
-      min-width: 44px;
-      min-height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 201;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .fullview__nav:active { background: rgba(255,255,255,0.3); }
-    .fullview__nav--prev { left: 12px; }
-    .fullview__nav--next { right: 12px; }
 
     .fullview__counter {
       position: absolute;
@@ -785,6 +784,11 @@
         </tbody>
       </table>
       <p class="calendar__dday" id="dday-text" aria-live="polite">D-DAY</p>
+      <a class="calendar__add-btn"
+         href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=%EC%A1%B0%EC%9E%AC%EC%98%81+%E2%9D%A4%EF%B8%8F+%EB%AF%BC%ED%98%84%EA%B2%BD+%EA%B2%B0%ED%98%BC%EC%8B%9D&dates=20260830T030000Z/20260830T050000Z&details=%EA%B9%8C%EC%82%AC%EA%B7%B8%EB%9E%91%EB%8D%B0+%EC%84%BC%ED%8A%B8%EB%A1%9C+%286%EC%B8%B5%29&location=%EC%84%9C%EC%9A%B8%ED%8A%B9%EB%B3%84%EC%8B%9C+%EA%B4%91%EC%A7%84%EA%B5%AC+%EB%8A%A5%EB%8F%99%EB%A1%9C+87"
+         target="_blank" rel="noopener noreferrer">
+        캘린더에 일정 추가
+      </a>
     </div>
   </section>
 
@@ -809,8 +813,6 @@
   <!-- 전체보기 오버레이 -->
   <div class="fullview" id="fullview" role="dialog" aria-modal="true" aria-label="전체보기" aria-hidden="true">
     <button class="fullview__close" aria-label="닫기">&times;</button>
-    <button class="fullview__nav fullview__nav--prev" aria-label="이전">&#10094;</button>
-    <button class="fullview__nav fullview__nav--next" aria-label="다음">&#10095;</button>
     <img src="" alt="전체보기" id="fullview-img" style="display:none;">
     <video id="fullview-video" controls playsinline style="display:none;" aria-label="동영상 전체보기"></video>
     <span class="fullview__counter" id="fullview-counter"></span>
@@ -916,6 +918,11 @@
 <script>
 (function () {
   'use strict';
+
+  /* 브라우저 자동 스크롤 복원 비활성화 */
+  if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+  }
 
   /* ── 상수 ── */
   var VENUE_LAT = 37.54060;
@@ -1443,10 +1450,6 @@
   fullview.addEventListener('click', function (e) {
     if (e.target === fullview) closeFullview();
   });
-
-  // 이전/다음 버튼
-  fullview.querySelector('.fullview__nav--prev').addEventListener('click', function (e) { e.stopPropagation(); showPrev(); });
-  fullview.querySelector('.fullview__nav--next').addEventListener('click', function (e) { e.stopPropagation(); showNext(); });
 
   // 터치 스와이프
   var touchStartX = 0;
