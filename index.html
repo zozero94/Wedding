@@ -88,14 +88,6 @@
       pointer-events: none;
     }
 
-    /* 갤러리/fullview 내부는 클릭 허용 */
-    .gallery-grid__item img,
-    .gallery-grid__item video,
-    .fullview img,
-    .fullview video {
-      pointer-events: auto;
-    }
-
     /* ================================================================
        Layout
        ================================================================ */
@@ -368,6 +360,15 @@
       visibility: visible;
       pointer-events: auto;
       transition: opacity 0.3s ease, visibility 0s;
+    }
+
+    .fullview img {
+      pointer-events: none;
+    }
+
+    .fullview video {
+      pointer-events: auto; /* controls 조작 필요 */
+      -webkit-touch-callout: none;
     }
 
     .fullview img,
@@ -824,7 +825,7 @@
   <div class="fullview" id="fullview" role="dialog" aria-modal="true" aria-label="전체보기" aria-hidden="true">
     <button class="fullview__close" aria-label="닫기">&times;</button>
     <img src="" alt="전체보기" id="fullview-img" style="display:none;">
-    <video id="fullview-video" controls playsinline style="display:none;" aria-label="동영상 전체보기"></video>
+    <video id="fullview-video" controls playsinline controlslist="nodownload nofullscreen" disablepictureinpicture style="display:none;" aria-label="동영상 전체보기"></video>
     <span class="fullview__counter" id="fullview-counter" aria-live="polite" aria-atomic="true"></span>
   </div>
 
@@ -1580,8 +1581,8 @@
     kakaomapBtn.addEventListener('click', function (e) {
       e.preventDefault();
       openAppWithFallback(
-        'kakaomap://look?p=' + VENUE_LAT + ',' + VENUE_LNG,
-        'https://map.kakao.com/link/map/' + VENUE_NAME + ',' + VENUE_LAT + ',' + VENUE_LNG
+        'kakaomap://place?id=67986660',
+        'https://place.map.kakao.com/67986660'
       );
     });
   }
