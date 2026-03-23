@@ -241,7 +241,7 @@
     .calendar th {
       font-size: 0.75rem;
       font-weight: 400;
-      color: #aaa;
+      color: #999;
       height: 36px;
       vertical-align: middle;
       text-align: center;
@@ -536,7 +536,7 @@
       line-height: 1.6;
     }
 
-    .account-item__bank { font-size: 0.75rem; color: #aaa; }
+    .account-item__bank { font-size: 0.75rem; color: #767676; }
 
     .copy-btn {
       background: var(--color-primary);
@@ -594,7 +594,7 @@
       padding: 40px 24px;
       text-align: center;
       font-size: 0.75rem;
-      color: #bbb;
+      color: #999;
     }
 
     .footer__names {
@@ -797,7 +797,7 @@
     <p class="section-title">GALLERY</p>
     <div class="gallery-grid" id="gallery-grid">
       <div class="gallery-grid__item" data-type="video" role="button" tabindex="0" aria-label="동영상 전체보기">
-        <video data-src="images/video.mp4" autoplay muted loop playsinline preload="none" aria-label="조재영 민현경 영상"></video>
+        <video data-src="images/video.mp4" autoplay muted loop playsinline preload="none" aria-hidden="true"></video>
       </div>
       <div class="gallery-grid__item" data-type="image" role="button" tabindex="0" aria-label="갤러리 사진 1 전체보기">
         <picture>
@@ -813,7 +813,7 @@
     <button class="fullview__close" aria-label="닫기">&times;</button>
     <img src="" alt="전체보기" id="fullview-img" style="display:none;">
     <video id="fullview-video" controls playsinline style="display:none;" aria-label="동영상 전체보기"></video>
-    <span class="fullview__counter" id="fullview-counter"></span>
+    <span class="fullview__counter" id="fullview-counter" aria-live="polite" aria-atomic="true"></span>
   </div>
 
   <div class="divider" role="separator" aria-hidden="true"></div>
@@ -976,8 +976,10 @@
 
     var canvas = document.createElement('canvas');
     canvas.style.cssText = 'position:fixed;inset:0;z-index:999;pointer-events:none;';
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    var vw = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+    var vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    canvas.width = vw;
+    canvas.height = vh;
     document.body.appendChild(canvas);
     var ctx = canvas.getContext('2d');
 
@@ -1042,7 +1044,6 @@
   window.addEventListener('scroll', function () {
     if (!ticking) {
       requestAnimationFrame(function () {
-        ticking = false;
         var scrollTop = window.scrollY || document.documentElement.scrollTop;
         var docHeight = document.documentElement.scrollHeight - window.innerHeight;
         var progress = docHeight > 0 ? scrollTop / docHeight : 0;
@@ -1058,6 +1059,7 @@
             shareBtn.classList.remove('visible');
           }
         }
+        ticking = false;
       });
       ticking = true;
     }
@@ -1283,38 +1285,53 @@
     }
   }
 
-  // 카카오 JS SDK 동적 로드
-  (function () {
+  // 카카오 JS SDK 지연 로드 (공유 버튼 클릭 시)
+  var kakaoSdkLoaded = false;
+  var kakaoSdkLoading = false;
+
+  function loadKakaoSDK(callback) {
+    if (kakaoSdkLoaded) { callback(); return; }
+    if (kakaoSdkLoading) { setTimeout(function () { loadKakaoSDK(callback); }, 100); return; }
+    kakaoSdkLoading = true;
     var script = document.createElement('script');
     script.src = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js';
     script.crossOrigin = 'anonymous';
-    script.async = true;
+    script.onload = function () {
+      kakaoSdkLoaded = true;
+      kakaoSdkLoading = false;
+      callback();
+    };
+    script.onerror = function () {
+      kakaoSdkLoading = false;
+      callback();
+    };
     document.head.appendChild(script);
-  })();
+  }
+
+  function doShare() {
+    if (shareKakao()) return;
+
+    if (navigator.share) {
+      navigator.share({
+        title: '조재영❤️민현경',
+        text: '2026년 8월 30일 일요일 낮 12시\n까사그랑데 센트로에서 결혼합니다.',
+        url: WEDDING_URL
+      }).catch(function () {});
+      return;
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(WEDDING_URL).then(function () {
+        showToast('링크가 복사되었습니다');
+      });
+    } else {
+      showToast('링크를 복사할 수 없습니다');
+    }
+  }
 
   if (shareBtn) {
     shareBtn.addEventListener('click', function () {
-      // 카카오톡 공유 우선
-      if (shareKakao()) return;
-
-      // Web Share API fallback
-      if (navigator.share) {
-        navigator.share({
-          title: '조재영❤️민현경',
-          text: '2026년 8월 30일 일요일 낮 12시\n까사그랑데 센트로에서 결혼합니다.',
-          url: window.location.href
-        }).catch(function () {});
-        return;
-      }
-
-      // 링크 복사 fallback
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(window.location.href).then(function () {
-          showToast('링크가 복사되었습니다');
-        });
-      } else {
-        showToast('링크를 복사할 수 없습니다');
-      }
+      loadKakaoSDK(doShare);
     });
   }
 
@@ -1449,15 +1466,19 @@
     if (e.target === fullview) closeFullview();
   });
 
-  // 터치 스와이프
+  // 터치 스와이프 (Y축 이동이 크면 무시)
   var touchStartX = 0;
+  var touchStartY = 0;
   fullview.addEventListener('touchstart', function (e) {
     touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
   }, { passive: true });
   fullview.addEventListener('touchend', function (e) {
-    var diff = touchStartX - e.changedTouches[0].screenX;
-    if (Math.abs(diff) > 50) {
-      if (diff > 0) showNext();
+    var diffX = touchStartX - e.changedTouches[0].screenX;
+    var diffY = touchStartY - e.changedTouches[0].screenY;
+    if (Math.abs(diffY) > Math.abs(diffX)) return; // 세로 스크롤 무시
+    if (Math.abs(diffX) > 50) {
+      if (diffX > 0) showNext();
       else showPrev();
     }
   }, { passive: true });
@@ -1493,32 +1514,43 @@
   var calBtn = document.getElementById('add-calendar-btn');
   if (calBtn) {
     calBtn.addEventListener('click', function () {
-      var calParams = 'text=' + encodeURIComponent('조재영 ❤️ 민현경 결혼식')
+      var calUrl = 'https://calendar.google.com/calendar/render?action=TEMPLATE'
+        + '&text=' + encodeURIComponent('조재영 ❤️ 민현경 결혼식')
         + '&dates=20260830T030000Z/20260830T050000Z'
         + '&details=' + encodeURIComponent('2026년 8월 30일 일요일 낮 12시\n까사그랑데 센트로 6층')
         + '&location=' + encodeURIComponent('까사그랑데 센트로, 서울 광진구 능동로 87');
+      // Android: 구글 캘린더 앱이 설치되어 있으면 앱으로 열림 (App Links)
+      // iOS/데스크탑: 구글 캘린더 웹으로 이동
+      window.open(calUrl, '_blank');
+    });
+  }
 
-      var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-      var isAndroid = /Android/i.test(navigator.userAgent);
+  /* ================================================================
+     딥링크 공통 함수 (앱 실행 시도 → 실패 시 웹 fallback)
+     ================================================================ */
+  function openAppWithFallback(appUrl, webFallbackUrl) {
+    var appOpened = false;
 
-      if (isAndroid) {
-        // Android: intent로 구글 캘린더 앱 직접 열기
-        window.location.href = 'intent://calendar/event?action=TEMPLATE&' + calParams
-          + '#Intent;scheme=https;package=com.google.android.calendar;'
-          + 'S.browser_fallback_url=' + encodeURIComponent('https://calendar.google.com/calendar/render?action=TEMPLATE&' + calParams)
-          + ';end';
-      } else if (isIOS) {
-        // iOS: 구글 캘린더 앱 스킴 시도 → 실패 시 웹
-        var appUrl = 'googlecalendar://openEvent?title=' + encodeURIComponent('조재영 ❤️ 민현경 결혼식');
-        var webUrl = 'https://calendar.google.com/calendar/render?action=TEMPLATE&' + calParams;
-        var timer = setTimeout(function () { window.open(webUrl, '_blank'); }, 1500);
-        window.addEventListener('blur', function () { clearTimeout(timer); }, { once: true });
-        window.location.href = appUrl;
-      } else {
-        // 데스크탑: 구글 캘린더 웹
-        window.open('https://calendar.google.com/calendar/render?action=TEMPLATE&' + calParams, '_blank');
+    function onAppSwitch() {
+      appOpened = true;
+    }
+
+    window.addEventListener('blur', onAppSwitch, { once: true });
+    document.addEventListener('visibilitychange', function handler() {
+      if (document.hidden) {
+        appOpened = true;
+        document.removeEventListener('visibilitychange', handler);
       }
     });
+
+    window.location.href = appUrl;
+
+    setTimeout(function () {
+      window.removeEventListener('blur', onAppSwitch);
+      if (!appOpened) {
+        window.open(webFallbackUrl, '_blank');
+      }
+    }, 800);
   }
 
   /* ================================================================
@@ -1528,15 +1560,10 @@
   if (kakaomapBtn) {
     kakaomapBtn.addEventListener('click', function (e) {
       e.preventDefault();
-      var appUrl = 'kakaomap://look?p=' + VENUE_LAT + ',' + VENUE_LNG;
-      var webUrl = 'https://map.kakao.com/link/map/' + encodeURIComponent(VENUE_NAME) + ',' + VENUE_LAT + ',' + VENUE_LNG;
-      var moved = false;
-
-      window.location.href = appUrl;
-      setTimeout(function () {
-        if (!moved) window.open(webUrl, '_blank');
-      }, 1500);
-      window.addEventListener('blur', function () { moved = true; }, { once: true });
+      openAppWithFallback(
+        'kakaomap://look?p=' + VENUE_LAT + ',' + VENUE_LNG,
+        'https://map.kakao.com/link/map/' + encodeURIComponent(VENUE_NAME) + ',' + VENUE_LAT + ',' + VENUE_LNG
+      );
     });
   }
 
@@ -1547,19 +1574,10 @@
   if (tmapBtn) {
     tmapBtn.addEventListener('click', function (e) {
       e.preventDefault();
-      var appUrl = 'tmap://route?goalname=' + encodeURIComponent('까사그랑데 센트로') + '&goalx=127.06882&goaly=37.54060';
-      var moved = false;
-
-      window.location.href = appUrl;
-
-      setTimeout(function () {
-        if (!moved) {
-          // 앱이 없으면 웹 검색으로 이동
-          window.open('https://tmap.life/' + encodeURIComponent('까사그랑데 센트로'), '_blank');
-        }
-      }, 1500);
-
-      window.addEventListener('blur', function () { moved = true; }, { once: true });
+      openAppWithFallback(
+        'tmap://route?goalname=' + encodeURIComponent(VENUE_NAME) + '&goalx=' + VENUE_LNG + '&goaly=' + VENUE_LAT,
+        'https://tmap.life/' + encodeURIComponent(VENUE_NAME)
+      );
     });
   }
 
