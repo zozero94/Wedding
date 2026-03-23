@@ -374,8 +374,8 @@
       함께해 주시면 큰 기쁨이겠습니다.
     </p>
     <div class="parents">
-      조OO · OOO 의 아들 <strong>재영</strong><br>
-      민OO · OOO 의 딸 <strong>현경</strong>
+      조현수 · 김덕미 의 아들 <strong>재영</strong><br>
+      민OO · 김희숙 의 딸 <strong>현경</strong>
     </div>
   </section>
 
@@ -413,7 +413,7 @@
           </tr>
         </tbody>
       </table>
-      <p class="dday">D-DAY</p>
+      <p class="dday" id="dday-text">D-DAY</p>
     </div>
   </section>
 
@@ -466,10 +466,10 @@
       <h4>신랑측</h4>
       <div class="account-item">
         <div class="info">
-          <span class="bank">OO은행</span><br>
-          000-0000-0000-00 조재영
+          <span class="bank">신한은행</span><br>
+          110-386-604593 조재영
         </div>
-        <button class="copy-btn" onclick="copyAccount('000-0000-0000-00')">복사</button>
+        <button class="copy-btn" onclick="copyAccount('110-386-604593')">복사</button>
       </div>
     </div>
 
@@ -509,26 +509,54 @@
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=52e9f0a8b230e753dfd15ff9782160c7&autoload=false"></script>
 <script>
   // 카카오맵 초기화
-  kakao.maps.load(function() {
-    var mapContainer = document.getElementById('kakao-map');
-    var mapOption = {
-      center: new kakao.maps.LatLng(37.54060, 127.06882),
-      level: 3
-    };
-    var map = new kakao.maps.Map(mapContainer, mapOption);
+  try {
+    kakao.maps.load(function() {
+      var mapContainer = document.getElementById('kakao-map');
+      var mapOption = {
+        center: new kakao.maps.LatLng(37.54060, 127.06882),
+        level: 3
+      };
+      var map = new kakao.maps.Map(mapContainer, mapOption);
 
-    // 마커
-    var marker = new kakao.maps.Marker({
-      position: new kakao.maps.LatLng(37.54060, 127.06882)
-    });
-    marker.setMap(map);
+      var marker = new kakao.maps.Marker({
+        position: new kakao.maps.LatLng(37.54060, 127.06882)
+      });
+      marker.setMap(map);
 
-    // 인포윈도우
-    var infowindow = new kakao.maps.InfoWindow({
-      content: '<div style="padding:5px 10px;font-size:12px;white-space:nowrap;">까사그랑데 센트로</div>'
+      var infowindow = new kakao.maps.InfoWindow({
+        content: '<div style="padding:5px 10px;font-size:12px;white-space:nowrap;">까사그랑데 센트로</div>'
+      });
+      infowindow.open(map, marker);
     });
-    infowindow.open(map, marker);
-  });
+  } catch(e) {
+    // SDK 로드 실패 시 안내
+    var mapEl = document.getElementById('kakao-map');
+    if (mapEl) {
+      mapEl.style.background = '#e8e2da';
+      mapEl.style.display = 'flex';
+      mapEl.style.alignItems = 'center';
+      mapEl.style.justifyContent = 'center';
+      mapEl.style.color = '#b0a898';
+      mapEl.style.fontSize = '14px';
+      mapEl.innerHTML = '아래 버튼으로 지도를 확인해주세요';
+    }
+  }
+
+  // D-Day 계산
+  (function() {
+    var wedding = new Date(2026, 7, 30); // 월은 0부터 시작
+    var today = new Date();
+    today.setHours(0,0,0,0);
+    var diff = Math.ceil((wedding - today) / (1000 * 60 * 60 * 24));
+    var el = document.getElementById('dday-text');
+    if (diff > 0) {
+      el.textContent = '결혼식까지 ' + diff + '일';
+    } else if (diff === 0) {
+      el.textContent = 'D-DAY';
+    } else {
+      el.textContent = '';
+    }
+  })();
 
   // 계좌번호 복사
   function copyAccount(account) {
