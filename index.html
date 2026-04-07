@@ -818,7 +818,7 @@
     <p class="section-title">GALLERY</p>
     <div class="gallery-grid" id="gallery-grid">
       <div class="gallery-grid__item" data-type="video" role="button" tabindex="0" aria-label="동영상 전체보기">
-        <video data-src="images/video.mp4" autoplay muted loop playsinline preload="none" aria-hidden="true"></video>
+        <video src="images/video.mp4" autoplay muted loop playsinline webkit-playsinline preload="auto" disableRemotePlayback aria-hidden="true"></video>
       </div>
       <div class="gallery-grid__item" data-type="image" role="button" tabindex="0" aria-label="사진 1 전체보기"><picture><source srcset="images/gallery-01.webp" type="image/webp"><img src="images/gallery-01.jpg" alt="사진 1" loading="lazy"></picture></div>
       <div class="gallery-grid__item" data-type="image" role="button" tabindex="0" aria-label="사진 2 전체보기"><picture><source srcset="images/gallery-02.webp" type="image/webp"><img src="images/gallery-02.jpg" alt="사진 2" loading="lazy"></picture></div>
@@ -1188,25 +1188,47 @@
   })();
 
   /* ================================================================
-     Video lazy load (IntersectionObserver)
+     Video 자동재생 (iOS 호환)
      ================================================================ */
-  var lazyVideo = document.querySelector('.gallery-grid video[data-src]');
-  if (lazyVideo && 'IntersectionObserver' in window) {
-    var videoObserver = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-          var v = entry.target;
-          v.src = v.dataset.src;
-          v.load();
-          var p = v.play();
-          if (p !== undefined) p.catch(function () {});
-          videoObserver.unobserve(v);
-        }
-      });
-    }, { rootMargin: '200px' });
-    videoObserver.observe(lazyVideo);
-  } else if (lazyVideo) {
-    lazyVideo.src = lazyVideo.dataset.src;
+  function safePlay(video) {
+    if (!video) return;
+    video.muted = true;
+    video.defaultMuted = true;
+    var p = video.play();
+    if (p !== undefined) p.catch(function () {});
+  }
+
+  var lazyVideo = document.querySelector('.gallery-grid video');
+  if (lazyVideo) {
+    if ('IntersectionObserver' in window) {
+      var videoObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            requestAnimationFrame(function () {
+              requestAnimationFrame(function () { safePlay(lazyVideo); });
+            });
+          }
+        });
+      }, { rootMargin: '200px' });
+      videoObserver.observe(lazyVideo);
+    } else {
+      safePlay(lazyVideo);
+    }
+
+    // 첫 터치 시 unlock (iOS 자동재생 차단 우회)
+    var unlockHandler = function () {
+      safePlay(lazyVideo);
+      document.removeEventListener('touchstart', unlockHandler);
+    };
+    document.addEventListener('touchstart', unlockHandler, { once: true, passive: true });
+
+    // 백그라운드 복귀 시 재시도
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden && lazyVideo.paused) safePlay(lazyVideo);
+    });
+    window.addEventListener('pageshow', function () {
+      if (lazyVideo.paused) safePlay(lazyVideo);
+    });
   }
 
   /* ================================================================
@@ -1406,7 +1428,7 @@
     var type = item.getAttribute('data-type');
     if (type === 'video') {
       var video = item.querySelector('video');
-      galleryItems.push({ type: 'video', src: video.dataset.src || video.src });
+      galleryItems.push({ type: 'video', src: video.src || video.dataset.src });
     } else {
       var img = item.querySelector('img');
       if (img) galleryItems.push({ type: 'image', src: img.src, alt: img.alt });
@@ -1419,8 +1441,9 @@
       fullviewImg.style.display = 'none';
       fullviewVideo.style.display = 'block';
       fullviewVideo.src = item.src;
-      var p = fullviewVideo.play();
-      if (p !== undefined) p.catch(function () { fullviewVideo.controls = true; });
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () { safePlay(fullviewVideo); });
+      });
     } else {
       fullviewVideo.style.display = 'none';
       fullviewVideo.pause();
