@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- Noto Serif KR 구글 웹폰트 로드 (iOS/Android 렌더링 일관성 보정) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <meta name="color-scheme" content="light">
   <title>조재영❤️민현경</title>
   <meta name="description" content="2026년 8월 30일 일요일 낮 12시, 까사그랑데 센트로에서 조재영과 민현경이 결혼합니다.">
@@ -79,7 +83,11 @@
       html { scroll-behavior: smooth; }
     }
 
-    html { background: var(--color-bg); }
+    html {
+      background: var(--color-bg);
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+    }
 
     body {
       font-family: var(--font-main);
@@ -514,7 +522,7 @@
     }
 
     html.large-text {
-      font-size: 115%;
+      font-size: 140%; /* 40% 확대하여 확실하게 큰 글씨 체감 제공 */
     }
 
     .floating-btn {
@@ -522,15 +530,15 @@
       bottom: calc(24px + env(safe-area-inset-bottom));
       left: 24px;
       z-index: 999;
-      padding: 12px 20px;
-      font-size: 0.875rem;
-      font-weight: 500;
+      padding: 14px 24px; /* 패딩을 넓혀 버튼 영역 확장 */
+      font-size: 1.05rem; /* 버튼 내 글자 크기를 더 크게 키움 */
+      font-weight: 600;
       font-family: var(--font-main);
       color: var(--color-text-light);
-      background: rgba(255, 255, 255, 0.95);
-      border: 1px solid var(--color-primary);
+      background: rgba(255, 255, 255, 0.96);
+      border: 1.5px solid var(--color-primary);
       border-radius: 30px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12); /* 그림자 강화 */
       cursor: pointer;
       transition: transform 0.3s ease, opacity 0.3s ease, background-color 0.2s, border-color 0.2s;
       display: inline-flex;
@@ -542,6 +550,11 @@
       -webkit-tap-highlight-color: transparent;
       opacity: 0;
       pointer-events: none;
+
+      /* iOS / Android 디바이스 렌더링 스타일 일관성 보정 */
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
     }
 
     .floating-btn.visible {
@@ -932,12 +945,6 @@
       <a class="map-btn" href="#" id="tmap-btn" rel="noopener noreferrer">티맵</a>
     </nav>
 
-    <dl class="transport">
-      <dt>지하철</dt>
-      <dd>2호선 · 7호선 건대입구역 5번 출구 도보 1분</dd>
-      <dt>주차</dt>
-      <dd>건물 지하주차장 이용 가능 (400대)</dd>
-    </dl>
 
     <div class="location__map-image-wrapper">
       <img src="images/map.jpg" alt="약도" class="location__map-image">
