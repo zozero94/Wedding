@@ -507,6 +507,13 @@
       width: 100%;
     }
 
+    .location__map-image-link {
+      display: block;
+      cursor: zoom-in; /* 클릭 시 확대된다는 시각적 피드백 제공 */
+      text-decoration: none;
+      -webkit-tap-highlight-color: rgba(0, 0, 0, 0.02);
+    }
+
     .location__map-image {
       width: 100%;
       height: auto;
@@ -515,6 +522,12 @@
       pointer-events: auto;
       user-select: auto;
       -webkit-user-select: auto;
+      transition: transform 0.2s ease;
+    }
+
+    /* 호버 시 은은한 스케일 애니메이션 추가 */
+    .location__map-image-link:hover .location__map-image {
+      transform: scale(1.01);
     }
 
     html {
@@ -947,7 +960,9 @@
 
 
     <div class="location__map-image-wrapper">
-      <img src="images/map.jpg" alt="약도" class="location__map-image">
+      <a href="images/map.jpg" target="_blank" rel="noopener noreferrer" aria-label="약도 크게 보기 (새창)" class="location__map-image-link">
+        <img src="images/map.jpg" alt="약도" class="location__map-image">
+      </a>
     </div>
   </section>
 
