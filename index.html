@@ -535,7 +535,7 @@
     }
 
     html.large-text {
-      font-size: 200%; /* 2배(200%)로 대폭 확대하여 아버님을 포함한 어르신들 시인성 극대화 */
+      font-size: 150%; /* 1.5배(150%)로 조정 및 iOS 대응 JS 보조 */
     }
 
     .floating-btn {
@@ -1791,12 +1791,24 @@
   if (fontBtn) {
     fontBtn.addEventListener('click', function () {
       var isLarge = htmlEl.classList.toggle('large-text');
+      
+      // iOS Safari의 rem 리렌더링 지연 버그를 보정하기 위해 인라인 스타일 강제 주입
+      htmlEl.style.fontSize = isLarge ? '150%' : '';
+
       if (isLarge) {
         fontBtn.textContent = '보통 글씨';
         fontBtn.classList.add('active');
       } else {
         fontBtn.textContent = '큰 글씨';
         fontBtn.classList.remove('active');
+      }
+
+      // iOS Safari에서 레이아웃 갱신(Reflow)이 누락되는 버그를 위한 티 안나는 강제 리플로우 트리거
+      var body = document.body;
+      if (body) {
+        body.style.paddingBottom = '1px';
+        body.offsetHeight; // 레이아웃을 다시 계산하게 만듦
+        body.style.paddingBottom = '';
       }
     });
   }
