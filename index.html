@@ -540,18 +540,19 @@
       -webkit-backdrop-filter: blur(4px);
       outline: none;
       -webkit-tap-highlight-color: transparent;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .floating-btn.visible {
+      opacity: 1;
+      pointer-events: auto;
     }
 
     .floating-btn.active {
       background: var(--color-primary);
       color: #fff;
       border-color: var(--color-primary-dark);
-    }
-
-    .floating-btn.hidden {
-      opacity: 0;
-      transform: translateY(100px) scale(0.9);
-      pointer-events: none;
     }
 
 
@@ -1026,6 +1027,9 @@
 <!-- Toast -->
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<!-- 글자 크기 조절 플로팅 버튼 -->
+<button id="font-toggle-btn" class="floating-btn" aria-label="글자 크기 변경">큰 글씨</button>
+
 <!-- ================================================================
      Scripts
      ================================================================ -->
@@ -1054,6 +1058,8 @@
   /* ── DOM 캐시 ── */
   var toastEl = document.getElementById('toast');
   var shareBtn = document.getElementById('share-float');
+  var fontBtn = document.getElementById('font-toggle-btn');
+  var htmlEl = document.documentElement;
   var scrollProgress = document.getElementById('scroll-progress');
   var fullview = document.getElementById('fullview');
   var fullviewImg = document.getElementById('fullview-img');
@@ -1173,12 +1179,12 @@
           scrollProgress.style.transform = 'scaleX(' + progress + ')';
         }
 
-        if (shareBtn) {
-          if (scrollTop > 200) {
-            shareBtn.classList.add('visible');
-          } else {
-            shareBtn.classList.remove('visible');
-          }
+        if (scrollTop > 200) {
+          if (shareBtn) shareBtn.classList.add('visible');
+          if (fontBtn) fontBtn.classList.add('visible');
+        } else {
+          if (shareBtn) shareBtn.classList.remove('visible');
+          if (fontBtn) fontBtn.classList.remove('visible');
         }
         ticking = false;
       });
@@ -1760,11 +1766,6 @@
   /* ================================================================
      글자 크기 조절 플로팅 버튼 기능
      ================================================================ */
-  var fontBtn = document.getElementById('font-toggle-btn');
-  var htmlEl = document.documentElement;
-  var lastScrollTop = 0;
-  var scrollDelta = 10;
-
   if (fontBtn) {
     fontBtn.addEventListener('click', function () {
       var isLarge = htmlEl.classList.toggle('large-text');
@@ -1776,25 +1777,10 @@
         fontBtn.classList.remove('active');
       }
     });
-
-    window.addEventListener('scroll', function () {
-      var st = window.pageYOffset || document.documentElement.scrollTop;
-      
-      if (Math.abs(lastScrollTop - st) <= scrollDelta) return;
-      
-      if (st > lastScrollTop && st > 100) {
-        fontBtn.classList.add('hidden');
-      } else {
-        fontBtn.classList.remove('hidden');
-      }
-      lastScrollTop = st;
-    }, { passive: true });
   }
 
 })();
 </script>
-
-<button id="font-toggle-btn" class="floating-btn" aria-label="글자 크기 변경">큰 글씨</button>
 
 </body>
 </html>
