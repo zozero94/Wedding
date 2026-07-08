@@ -494,6 +494,67 @@
     .transport dt { color: var(--color-text-light); font-weight: 500; }
     .transport dd { margin-left: 0; margin-bottom: 12px; }
 
+    .location__map-image-wrapper {
+      margin-top: 24px;
+      width: 100%;
+    }
+
+    .location__map-image {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      pointer-events: auto;
+      user-select: auto;
+      -webkit-user-select: auto;
+    }
+
+    html {
+      transition: font-size 0.2s ease;
+    }
+
+    html.large-text {
+      font-size: 115%;
+    }
+
+    .floating-btn {
+      position: fixed;
+      bottom: calc(24px + env(safe-area-inset-bottom));
+      left: 24px;
+      z-index: 999;
+      padding: 12px 20px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      font-family: var(--font-main);
+      color: var(--color-text-light);
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid var(--color-primary);
+      border-radius: 30px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+      transition: transform 0.3s ease, opacity 0.3s ease, background-color 0.2s, border-color 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .floating-btn.active {
+      background: var(--color-primary);
+      color: #fff;
+      border-color: var(--color-primary-dark);
+    }
+
+    .floating-btn.hidden {
+      opacity: 0;
+      transform: translateY(100px) scale(0.9);
+      pointer-events: none;
+    }
+
+
     /* ================================================================
        6. Account (마음 전하기)
        ================================================================ */
@@ -876,6 +937,10 @@
       <dt>주차</dt>
       <dd>건물 지하주차장 이용 가능 (400대)</dd>
     </dl>
+
+    <div class="location__map-image-wrapper">
+      <img src="images/map.jpg" alt="약도" class="location__map-image">
+    </div>
   </section>
 
   <div class="divider" role="separator" aria-hidden="true"></div>
@@ -1692,8 +1757,44 @@
     });
   }
 
+  /* ================================================================
+     글자 크기 조절 플로팅 버튼 기능
+     ================================================================ */
+  var fontBtn = document.getElementById('font-toggle-btn');
+  var htmlEl = document.documentElement;
+  var lastScrollTop = 0;
+  var scrollDelta = 10;
+
+  if (fontBtn) {
+    fontBtn.addEventListener('click', function () {
+      var isLarge = htmlEl.classList.toggle('large-text');
+      if (isLarge) {
+        fontBtn.textContent = '보통 글씨';
+        fontBtn.classList.add('active');
+      } else {
+        fontBtn.textContent = '큰 글씨';
+        fontBtn.classList.remove('active');
+      }
+    });
+
+    window.addEventListener('scroll', function () {
+      var st = window.pageYOffset || document.documentElement.scrollTop;
+      
+      if (Math.abs(lastScrollTop - st) <= scrollDelta) return;
+      
+      if (st > lastScrollTop && st > 100) {
+        fontBtn.classList.add('hidden');
+      } else {
+        fontBtn.classList.remove('hidden');
+      }
+      lastScrollTop = st;
+    }, { passive: true });
+  }
+
 })();
 </script>
+
+<button id="font-toggle-btn" class="floating-btn" aria-label="글자 크기 변경">큰 글씨</button>
 
 </body>
 </html>
